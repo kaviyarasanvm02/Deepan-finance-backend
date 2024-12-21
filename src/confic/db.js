@@ -31,7 +31,6 @@ const createHeaderLanding = `CREATE TABLE IF NOT EXISTS headerlanding (
   title VARCHAR(200) NOT NULL,
   description VARCHAR(200) NOT NULL,
   image VARCHAR(255) NOT NULL, 
-  path VARCHAR(255) NOT NULL,  
   button_name VARCHAR(50) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;`;
@@ -60,7 +59,7 @@ const createJoinUs = `CREATE TABLE IF NOT EXISTS joinsus (
   title VARCHAR(100) NOT NULL,
   button_name1 VARCHAR(50) NOT NULL,
   button_name2 VARCHAR(50) NOT NULL,
-  image VARCHAR(50) NOT NULL, 
+  image VARCHAR(255) NOT NULL, 
   PRIMARY KEY (id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;`;
 
@@ -70,8 +69,8 @@ const createSocialMedia = `CREATE TABLE IF NOT EXISTS socialMedia (
   title VARCHAR(100) NOT NULL,
   subTitle VARCHAR(50) NOT NULL,
   description VARCHAR(500) NOT NULL,
+  image VARCHAR(255) NOT NULL, 
   url VARCHAR(255) NOT NULL,
-  url_type VARCHAR(50) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;`;
 

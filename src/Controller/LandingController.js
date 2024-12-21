@@ -6,7 +6,6 @@ const { log } = require("console");
 //Header
 exports.getHeaderData = (req, res) => {
   let responseSent = false;
-console.log("success");
 
   const sendResponse = (status, data) => {
     if (!responseSent) {
@@ -16,12 +15,14 @@ console.log("success");
   };
   try {
     LandingModal.getHeadersData(req, (headerErr, headerData) => {
+      console.log("headerData", headerData);
+
       if (headerErr) {
         return sendResponse(Environment.SERVER_ERROR, {
           error: Environment.SERVER_ERROR_MESSAGE,
         });
       }
-      sendResponse(200, headerData );
+      sendResponse(200, headerData);
     });
   } catch (e) {
     console.log("getHeaderData Controller catch", e);
@@ -49,65 +50,61 @@ exports.getHeaderSectionData = ({}, res) => {
 };
 
 exports.createHeaderSectionData = (req, res) => {
-  const { title, subTitle, description, link, button_name } = req.body;
-  const images = req.files;
+  const { title, subTitle, description, button_name } = req.body;
+  const image = req.file; // Single file upload is available as req.file
 
-  if (!title || !subTitle || !description || !images || images.length === 0) {
-    return res.status(Environment.BAD_REQUEST).send({ error: "All fields are required" });
+  console.log("Request Body:", req.body);
+  console.log("Uploaded File:", image);
+
+  // Validate required fields
+  if (!title || !subTitle || !description || !button_name || !image) {
+    return res
+      .status(400)
+      .send({ error: "All fields are required, including the image." });
   }
 
   try {
-    const imgUrl_1 = images[0] ? "/Docs/Landing/" + images[0].filename : "";
+    // Build image URL
+    const imgUrl_1 = `/Docs/Landing/${image.filename}`;
 
+    // Call model function to create header data
     LandingModal.createHeaderData(
       {
         title,
         subTitle,
         description,
-        link,
         button_name,
         imgUrl_1,
       },
       (err, data) => {
         if (err) {
           return res
-            .status(Environment.SERVER_ERROR)
-            .send({ error: Environment.SERVER_ERROR_MESSAGE });
+            .status(500)
+            .send({ error: "Failed to create header section." });
         }
-        res.send(data);
+        res
+          .status(201)
+          .send({ message: "Header section created successfully!", data });
       }
     );
   } catch (e) {
-    res
-      .status(Environment.SERVER_ERROR)
-      .send({ error: Environment.SERVER_ERROR_MESSAGE });
-    throw e;
+    console.error("Error in createHeaderSectionData:", e);
+    res.status(500).send({ error: "An unexpected server error occurred." });
   }
 };
 
 exports.updateHeaderSection = (req, res) => {
   const id = req.params.id;
-  const { title, subTitle, description, link, button_name } = req.body;
-  const images = req.files;
+  const { title, subTitle, description, button_name } = req.body;
+  const image = req.file;
+  console.log("Uploaded image:", image);
 
-  if (!id || !title || !subTitle || !description || !link || !button_name) {
-    return res.status(Environment.BAD_REQUEST).send({ error: "All fields are required" });
+  if (!id || !title || !subTitle || !description || !button_name) {
+    return res.status(400).send({ error: "All fields are required" });
   }
 
   try {
-    let imgUrl_1 = "";
-
-    if (images && images.length > 0) {
-      imgUrl_1 = "/Docs/Landing/" + images[0].filename;
-    }
-
-    LandingModal.getHeadersData({}, (err, data) => {
-      if (err) {
-        return res
-          .status(Environment.SERVER_ERROR)
-          .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      }
-    });
+    const imgUrl_1 = `/Docs/Landing/${image.filename}`;
 
     LandingModal.updateHeaderData(
       {
@@ -115,27 +112,21 @@ exports.updateHeaderSection = (req, res) => {
         title,
         subTitle,
         description,
-        link,
         imgUrl_1,
         button_name,
       },
       (err, data) => {
         if (err) {
-          return res
-            .status(Environment.SERVER_ERROR)
-            .send({ error: Environment.SERVER_ERROR_MESSAGE });
+          return res.status(500).send({ error: "Server error occurred" });
         }
         res.send(data);
       }
     );
   } catch (e) {
-    res
-      .status(Environment.SERVER_ERROR)
-      .send({ error: Environment.SERVER_ERROR_MESSAGE });
+    res.status(500).send({ error: "Server error occurred" });
     throw e;
   }
 };
-
 
 //About
 exports.getAboutData = (req, res) => {
@@ -154,7 +145,7 @@ exports.getAboutData = (req, res) => {
           error: Environment.SERVER_ERROR_MESSAGE,
         });
       }
-      sendResponse(200,  aboutData );
+      sendResponse(200, aboutData);
     });
   } catch (e) {
     console.log("getAboutData Controller catch", e);
@@ -212,41 +203,32 @@ exports.createAboutSectionData = (req, res) => {
 
 exports.updateAboutSection = (req, res) => {
   const id = req.params.id;
-  const title = req.body.title;
-  const description = req.body.description;
+  const { title, description } = req.body;
   if (!id || !title || !description) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    try {
-      LandingModal.getAboutsData({}, (err, data) => {
-        if (err)
+    return res.status(400).send({ error: "All fields are required" });
+  }
+  try {
+    LandingModal.updateAboutData(
+      {
+        id,
+        title,
+        description,
+      },
+      (err, data) => {
+        if (err) {
           res
             .status(Environment.SERVER_ERROR)
             .send({ error: Environment.SERVER_ERROR_MESSAGE });
-        else res.send(data);
-      });
-      LandingModal.updateAboutData(
-        {
-          id,
-          title,
-          description,
-        },
-        (err, data) => {
-          if (err) {
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          } else {
-            res.send(data);
-          }
+        } else {
+          res.send(data);
         }
-      );
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
-    }
+      }
+    );
+  } catch (e) {
+    res
+      .status(Environment.SERVER_ERROR)
+      .send({ error: Environment.SERVER_ERROR_MESSAGE });
+    throw e;
   }
 };
 
@@ -352,7 +334,7 @@ exports.getBlogData = (req, res) => {
           error: Environment.SERVER_ERROR_MESSAGE,
         });
       }
-      sendResponse(200,  blogsData );
+      sendResponse(200, blogsData);
     });
   } catch (e) {
     console.log("getBlogsData Controller catch", e);
@@ -378,91 +360,74 @@ exports.getBlogsSectionData = ({}, res) => {
     throw e;
   }
 };
-
 exports.createBlogsSectionData = (req, res) => {
   const title = req.body.title;
   const subTitle = req.body.subTitle;
   const description = req.body.description;
-  const images = req.files;
-  if (!title || !subTitle || !description || !images) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    const imgUrl = images?.image_1
-      ? "/Docs/Landing" + images.image_1[0].filename
-      : "";
-    try {
-      LandingModal.createBlogsData(
-        {
-          title,
-          subTitle,
-          description,
-          imgUrl,
-        },
-        (err, data) => {
-          if (err)
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          else res.send(data);
+  const image = req.file;
+
+  if (!title || !subTitle || !description || !image) {
+    return res.status(400).send({ error: "All fields are required, including the image." });
+  }
+
+  try {
+    const imgUrl = `/Docs/Landing/${image.filename}`;
+    LandingModal.createBlogsData(
+      { title, subTitle, description, imgUrl },
+      (err, data) => {
+        if (err) {
+          res.status(Environment.SERVER_ERROR).send({ error: Environment.SERVER_ERROR_MESSAGE });
+        } else {
+          res.send(data);
         }
-      );
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
-    }
+      }
+    );
+  } catch (e) {
+    res.status(Environment.SERVER_ERROR).send({ error: Environment.SERVER_ERROR_MESSAGE });
+    throw e;
+  }
+};
+exports.updateBlogsSection = (req, res) => {
+  console.log("Params:", req.params);
+  console.log("Body:", req.body);
+  console.log("File:", req.file);
+
+  const id = req.params.id;
+  const { title, subTitle, description } = req.body;
+  const image = req.file;
+
+  if (!id || !title || !subTitle || !description) {
+    console.error("Missing required fields.");
+    return res.status(400).send({ error: "ID, title, subTitle, and description are required." });
+  }
+
+  try {
+    const imgUrl = image ? `/Docs/Landing/${image.filename}` : undefined;
+
+    LandingModal.updateBlogsData(
+      {
+        id,
+        title,
+        subTitle,
+        description,
+        imgUrl,
+      },
+      (err, data) => {
+        if (err) {
+          console.error("Database Update Error:", err);
+          return res.status(500).send({ error: "Something went wrong!" });
+        }
+        res.send(data);
+      }
+    );
+  } catch (e) {
+    console.error("Unexpected Error:", e);
+    res.status(500).send({ error: "Something went wrong!" });
   }
 };
 
-exports.updateBlogsSection = (req, res) => {
-  const id = req.params.id;
-  const title = req.body.title;
-  const subTitle = req.body.subTitle;
-  const images = req.files;
-  const description = req.body.description;
-  if (!id || !title || !subTitle || !description) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    try {
-      if (images) {
-        const image_1 = images?.image_1
-          ? "/Docs/Landing/" + images.image_1[0].filename
-          : "";
-          LandingModal.getBlogsData({}, (err, data) => {
-            if (err)
-              res
-                .status(Environment.SERVER_ERROR)
-                .send({ error: Environment.SERVER_ERROR_MESSAGE });
-            else res.send(data);
-          });
-        LandingModal.updateBlogsData(
-          {
-            id,
-            title,
-            subTitle,
-            description,
-            image_1,
-          },
-          (err, data) => {
-            if (err) {
-              res
-                .status(Environment.SERVER_ERROR)
-                .send({ error: Environment.SERVER_ERROR_MESSAGE });
-            } else {
-              res.send(data);
-            }
-          }
-        );
-      }
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
-    }
-  }
-};
+
+
 
 //JoinUs
 exports.getJoinUsData = (req, res) => {
@@ -509,29 +474,26 @@ exports.getJoinsUsSectionData = ({}, res) => {
 };
 
 exports.createJoinUsSectionData = (req, res) => {
-  const title = req.body.title;
+
+  const { title, button_name1, button_name2 } = req.body;
   const image = req.file;
-  const button_name1 = req.body.button_name1;
-  const button_name2 = req.body.button_name2;
-  const link1 = req.body.link;
-  const link2 = req.body.link;
-  if (!title ) {
-    res.sendStatus(Environment.BAD_REQUEST);
+  if (!title ||  !button_name1 || !button_name2 || !image) {
+    return res
+      .status(400)
+      .send({ error: "All fields are required, including the image." });
   } else {
     try {
-      if(image) {
-      const imgUrl = "/Docs/Landing/" + req.file.filename;
-      LandingModal.createJoinsUsData(
-        { title, imgUrl, link1, link2, button_name1, button_name2 },
-        (err, data) => {
-          if (err)
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          else res.send(data);
-        }
-      );
-    }
+        const imgUrl = `/Docs/Landing/${image.filename}`;
+        LandingModal.createJoinsUsData(
+          { title, imgUrl, button_name1, button_name2 },
+          (err, data) => {
+            if (err)
+              res
+                .status(Environment.SERVER_ERROR)
+                .send({ error: Environment.SERVER_ERROR_MESSAGE });
+            else res.send(data);
+          }
+        );
     } catch (e) {
       res
         .status(Environment.SERVER_ERROR)
@@ -542,62 +504,41 @@ exports.createJoinUsSectionData = (req, res) => {
 };
 
 exports.updateJoinusSection = (req, res) => {
+  console.log("Request Params:", req.params);
+  console.log("Request Body:", req.body);
+  console.log("Uploaded File:", req.file);
+
   const id = req.params.id;
-  const title = req.body.title;
-  const link1 = req.body.link1;
-  const link2 = req.body.link2;
-  const button_name1 = req.body.button_name;
-  const button_name2 = req.body.button_name;
-  const images = req.file;
-  if (
-    !id ||
-    !title ||
-    !link1 ||
-    !link2 ||
-    !button_name1 ||
-    !button_name2
-  ) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    try {
-      if (images) {
-        const imageUrl = images?.image_1
-          ? "/Docs/Landing" + images.image_1[0].filename
-          : "";
-        LandingModal.getJoinsUsData({}, (err, data) => {
-          if (err)
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          else res.send(data);
-        });
-        LandingModal.updateJoinUsData(
-          {
-            id,
-            title,
-            imageUrl,
-            link1,
-            link2,
-            button_name1,
-            button_name2,
-          },
-          (err, data) => {
-            if (err) {
-              res
-                .status(Environment.SERVER_ERROR)
-                .send({ error: Environment.SERVER_ERROR_MESSAGE });
-            } else {
-              res.send(data);
-            }
-          }
-        );
+  const {title,button_name1,button_name2} = req.body;
+  const image = req.file;
+
+  if (!id || !title || !button_name1 || !button_name2) {
+    return res.status(400).send({ error: "ID, title, and button names are required." });
+  }
+
+
+  try {
+    const imageUrl = `/Docs/Landing/${image.filename}`;
+
+    LandingModal.updateJoinUsData(
+      {
+        id,
+        title,
+        imageUrl,
+        button_name1,
+        button_name2,
+      },
+      (err, data) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).send({ error: "Internal Server Error" });
+        }
+        res.send(data);
       }
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
-    }
+    );
+  } catch (e) {
+    console.error("Unexpected Error:", e);
+    res.status(500).send({ error: "Internal Server Error" });
   }
 };
 
@@ -628,14 +569,23 @@ exports.getCaseStudyData = (req, res) => {
   }
 };
 
-exports.getCaseStudy = ({}, res) => {
+exports.getCaseStudy = (req, res) => {
   try {
     LandingModal.getCaseStudysData({}, (err, data) => {
-      if (err)
-        res
+      if (err) {
+        return res
           .status(Environment.SERVER_ERROR)
           .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      else res.send(data);
+      }
+
+      // Format image URL
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const formattedData = data.map((item) => ({
+        ...item,
+        image: `${baseUrl}${item.image}`, // Append base URL to image path
+      }));
+
+      res.send(formattedData);
     });
   } catch (e) {
     res
@@ -645,75 +595,86 @@ exports.getCaseStudy = ({}, res) => {
   }
 };
 
+
 exports.createCaseStudy = (req, res) => {
-  const title = req.body.title;
-  const subTitle = req.body.description;
-  const content = req.body.content;
-  const image = req.file;
-  if (!title || !subTitle || !content || !image) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    const imagUrl = "/Docs/Landing/" + req.file.filename;
-    try {
-      LandingModal.CreateCaseStudy(
-        { title, subTitle, content, imagUrl },
-        (err, data) => {
-          if (err) {
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          } else {
-            res.send(data);
-          }
-        }
-      );
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
+  try {
+    const { title, subTitle, description } = req.body;
+    const image = req.file;
+    const url = req.body.url;
+
+    console.log("Request Body:", req.body);
+    console.log("Uploaded File:", req.file);
+
+    // Check for missing fields
+    if (!title || !subTitle || !description || !url || !image) {
+      console.error("Missing Fields:", {
+        title: !title ? "Missing" : "Provided",
+        subTitle: !subTitle ? "Missing" : "Provided",
+        description: !description ? "Missing" : "Provided",
+        url: !url ? "Missing" : "Provided",
+        file: !image ? "Missing" : "Provided",
+      });
+      return res.status(400).json({ error: "All fields are required" });
     }
+
+    const imageUrl = `/Docs/Landing/${image.filename}`;
+
+    // Insert data into the database
+    LandingModal.CreateCaseStudy(
+      { title, subTitle, description, imagUrl: imageUrl, url },
+      (err, data) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ error: "An error occurred while creating the case study" });
+        }
+        res.status(201).json({ message: "Case study created successfully", data });
+      }
+    );
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ error: "An unexpected error occurred on the server" });
   }
 };
+
+
 
 exports.updateCaseStudy = (req, res) => {
   const id = req.params.id;
   const title = req.body.title;
   const subTitle = req.body.subTitle;
-  const content = req.body.content;
+  const description = req.body.description; // Fixed the key from `content` to `description`
   const url = req.body.url;
-  const url_type = req.body.url_type;
-  const image = req.file;
-  if (!id || !title || !subTitle || !content) {
-    res.sendStatus(Environment.BAD_REQUEST);
+  const image = req.file ? `/Docs/Landing/${req.file.filename}` : null; // Handle optional image
+
+  // Validate required fields except `image`
+  if (!id || !title || !subTitle || !description || !url) {
+    return res.status(400).send({ error: "All fields except image are required" });
   }
+
   try {
+    const updateData = {
+      id,
+      title,
+      subTitle,
+      description,
+      url,
+    };
+
+    // Add `imgUrl` only if a new image is uploaded
     if (image) {
-      const imgUrl = "/Docs/Landing/" + req.file.filename;
-      LandingModal.getCaseStudysData(
-        { id, title, subTitle, content, imgUrl, url, url_type },
-        (err, data) => {
-          if (err) {
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          }
-          res.send(data);
-        }
-      );
-    } else {
-      LandingModal.updateCaseStudy(
-        { id, title, subTitle, content, url, url_type },
-        (err, data) => {
-          if (err) {
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          }
-          res.send(data);
-        }
-      );
+      updateData.imgUrl = image;
     }
+
+    LandingModal.updateCaseStudy(updateData, (err, data) => {
+      if (err) {
+        return res
+          .status(Environment.SERVER_ERROR)
+          .send({ error: Environment.SERVER_ERROR_MESSAGE });
+      }
+      res.send(data);
+    });
   } catch (e) {
     res
       .status(Environment.SERVER_ERROR)
@@ -723,7 +684,7 @@ exports.updateCaseStudy = (req, res) => {
 };
 
 //Reviews
-exports.getReviewData = (req,res) => {
+exports.getReviewData = (req, res) => {
   let responseSent = false;
 
   const sendResponse = (status, data) => {
@@ -749,7 +710,7 @@ exports.getReviewData = (req,res) => {
   }
 };
 
-exports.getReview = ({},res) => {
+exports.getReview = ({}, res) => {
   try {
     LandingModal.getReviewsData({}, (err, data) => {
       if (err)
@@ -766,12 +727,12 @@ exports.getReview = ({},res) => {
   }
 };
 
-exports.createReview = (req,res) => {
+exports.createReview = (req, res) => {
   const title = req.body.title;
   const subTitle = req.body.subTitle;
   const description = req.body.description;
   if (!title || !subTitle || !description) {
-    res.sendStatus(Environment.BAD_REQUEST);
+    return res.status(400).send({ error: "All fields are required" });
   } else {
     try {
       LandingModal.createReviewsData(
@@ -797,22 +758,22 @@ exports.createReview = (req,res) => {
   }
 };
 
-exports.updateReview = (req,res) => {
+exports.updateReview = (req, res) => {
   const id = req.params.id;
   const title = req.body.title;
   const subTitle = req.body.subTitle;
   const description = req.body.description;
   if (!id || !title || !subTitle || !description) {
-    res.sendStatus(Environment.BAD_REQUEST);
+    return res.status(400).send({ error: "All fields are required" });
   } else {
     try {
-      LandingModal.getReviewsData({}, (err, data) => {
-        if (err)
-          res
-            .status(Environment.SERVER_ERROR)
-            .send({ error: Environment.SERVER_ERROR_MESSAGE });
-        else res.send(data);
-      });
+      // LandingModal.getReviewsData({}, (err, data) => {
+      //   if (err)
+      //     res
+      //       .status(Environment.SERVER_ERROR)
+      //       .send({ error: Environment.SERVER_ERROR_MESSAGE });
+      //   else res.send(data);
+      // });
       LandingModal.updateReviewsData(
         {
           id,
