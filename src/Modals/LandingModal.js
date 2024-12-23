@@ -394,10 +394,13 @@ LandingModal.getReviewsData = (input,output) => {
   }
 };
 
-LandingModal.updateReviewsData = (input,output) => {
-  const { title,subTitle, description } = input;
+LandingModal.updateReviewsData = (input, output) => {
+  const { id, title, subTitle, description } = input;
 
-  let query = `update reviews set title= '${title}',subTitle='${subTitle}',description = '${description}'`;
+  let query = `UPDATE reviews 
+               SET title = '${title}', subTitle = '${subTitle}', description = '${description}' 
+               WHERE id = ${id}`; // Add a WHERE clause to filter by ID
+
   try {
     db.query(query, function (err, result) {
       if (err) {
@@ -414,6 +417,7 @@ LandingModal.updateReviewsData = (input,output) => {
     throw e;
   }
 };
+
 
 LandingModal.createReviewsData = (input,output) => {
   const { title,subTitle, description } = input;

@@ -39,7 +39,7 @@ const createHeaderLanding = `CREATE TABLE IF NOT EXISTS headerlanding (
 const createAboutLanding = `CREATE TABLE IF NOT EXISTS aboutlanding (
   id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(70) NOT NULL,
-  description VARCHAR(500) NOT NULL,
+  description VARCHAR(1000) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;`;
 
@@ -79,7 +79,7 @@ const createReviews = `CREATE TABLE IF NOT EXISTS reviews (
   id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(500) NOT NULL,
   subTitle VARCHAR(100) NOT NULL,
-  description VARCHAR(100) NOT NULL,
+  description VARCHAR(1000) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;`;
 
