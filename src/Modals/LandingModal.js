@@ -33,18 +33,21 @@ LandingModal.updateHeaderData = (input, output) => {
     button_name = '${button_name}'`;
 
   if (imgUrl_1) {
-    query += `, image = '${imgUrl_1}'`; 
+    query += `, image = '${imgUrl_1}'`;
   }
 
-  query += ` WHERE id = ${id};`; 
+  query += ` WHERE id = ${id};`;
 
-  console.log("Executing query:", query); 
+  console.log("Executing query:", query);
 
   try {
     db.query(query, (err, result) => {
       if (err) {
         console.error("Database query error:", err);
-        output({ error: "An error occurred while updating the database" }, null);
+        output(
+          { error: "An error occurred while updating the database" },
+          null
+        );
         return;
       }
 
@@ -56,8 +59,6 @@ LandingModal.updateHeaderData = (input, output) => {
   }
 };
 
-
-
 LandingModal.createHeaderData = (input, output) => {
   const { title, subTitle, description, imgUrl_1, button_name } = input;
 
@@ -65,7 +66,7 @@ LandingModal.createHeaderData = (input, output) => {
                  (title, subTitle, description, image, button_name) 
                  VALUES ('${title}', '${subTitle}', '${description}', '${imgUrl_1}', '${button_name}');`;
 
-  console.log("Executing Query:", query); 
+  console.log("Executing Query:", query);
 
   try {
     db.query(query, (err, result) => {
@@ -79,10 +80,12 @@ LandingModal.createHeaderData = (input, output) => {
     });
   } catch (e) {
     console.error("Error in createHeaderData:", e);
-    output({ error: "Server error occurred while inserting header data." }, null);
+    output(
+      { error: "Server error occurred while inserting header data." },
+      null
+    );
   }
 };
-
 
 // //About
 LandingModal.getAboutsData = (input, output) => {
@@ -105,27 +108,32 @@ LandingModal.getAboutsData = (input, output) => {
 
 LandingModal.updateAboutData = (input, output) => {
   const { id, title, description } = input;
-console.log(input);
+  console.log(input);
 
   let query = `UPDATE aboutlanding SET title = ?, description = ? WHERE id = ?`;
-  
+
   // Use parameterized queries to avoid SQL injection
   db.query(query, [title, description, id], function (err, result) {
     if (err) {
-      console.error("Database query error: ", err);  // Log the error
-      output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
+      console.error("Database query error: ", err); // Log the error
+      output(
+        { error: { description: Environment.SERVER_ERROR_MESSAGE } },
+        null
+      );
       return;
     }
 
     if (result.affectedRows === 0) {
-      output({ error: { description: "No matching record found for the given ID" } }, null);
+      output(
+        { error: { description: "No matching record found for the given ID" } },
+        null
+      );
       return;
     }
 
     output(null, { message: "SUCCESS" });
   });
 };
-
 
 LandingModal.createAboutData = (input, output) => {
   const { title, description } = input;
@@ -172,6 +180,32 @@ LandingModal.getBlogsData = (input, output) => {
   }
 };
 
+LandingModal.getOneBlogData = (id, output) => {
+  let query = `SELECT * FROM cardcontent WHERE id = ?`;
+  console.log("Fetching blog with ID:", id);
+
+  try {
+    db.query(query, [id], function (err, cardResult) {
+      if (err) {
+        console.error("Error executing query:", err);
+        return output(
+          { error: { description: Environment.SERVER_ERROR_MESSAGE } },
+          null
+        );
+      }
+
+      if (cardResult.length === 0) {
+        return output({ error: { description: "Blog not found" } }, null);
+      }
+
+      console.log("Fetched Blog Data:", cardResult[0]);
+      output(null, cardResult[0]); // Return single blog
+    });
+  } catch (e) {
+    output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
+  }
+};
+
 LandingModal.updateBlogsData = (input, output) => {
   const { id, title, subTitle, description, imgUrl } = input;
 
@@ -193,7 +227,10 @@ LandingModal.updateBlogsData = (input, output) => {
   try {
     db.query(query, params, function (err, result) {
       if (err) {
-        output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
+        output(
+          { error: { description: Environment.SERVER_ERROR_MESSAGE } },
+          null
+        );
         throw err;
       }
       output(null, { message: "SUCCESS" });
@@ -204,20 +241,25 @@ LandingModal.updateBlogsData = (input, output) => {
   }
 };
 
-
-
 LandingModal.createBlogsData = (input, output) => {
   const { title, subTitle, description, imgUrl } = input;
   const query = `INSERT INTO cardcontent (title, subTitle, description, image) VALUES (?, ?, ?, ?)`;
 
   try {
-    db.query(query, [title, subTitle, description, imgUrl], function (err, result) {
-      if (err) {
-        output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
-        throw err;
+    db.query(
+      query,
+      [title, subTitle, description, imgUrl],
+      function (err, result) {
+        if (err) {
+          output(
+            { error: { description: Environment.SERVER_ERROR_MESSAGE } },
+            null
+          );
+          throw err;
+        }
+        output(null, { message: "SUCCESS" });
       }
-      output(null, { message: "SUCCESS" });
-    });
+    );
   } catch (e) {
     output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
     throw e;
@@ -275,7 +317,6 @@ LandingModal.updateJoinUsData = (input, output) => {
   }
 };
 
-
 LandingModal.createJoinsUsData = (input, output) => {
   const { title, imgUrl, button_name1, button_name2 } = input; // Use consistent column name
   const query = `
@@ -284,19 +325,28 @@ LandingModal.createJoinsUsData = (input, output) => {
   `;
 
   try {
-    db.query(query, [title, imgUrl, button_name1, button_name2], (err, result) => {
-      if (err) {
-        console.error("SQL Query Error:", err); // Log for debugging
-        return output({ error: { description: "Failed to execute query." } }, null);
+    db.query(
+      query,
+      [title, imgUrl, button_name1, button_name2],
+      (err, result) => {
+        if (err) {
+          console.error("SQL Query Error:", err); // Log for debugging
+          return output(
+            { error: { description: "Failed to execute query." } },
+            null
+          );
+        }
+        output(null, { message: "SUCCESS" });
       }
-      output(null, { message: "SUCCESS" });
-    });
+    );
   } catch (e) {
     console.error("Unexpected Error:", e); // Log for debugging
-    return output({ error: { description: "Unexpected error occurred." } }, null);
+    return output(
+      { error: { description: "Unexpected error occurred." } },
+      null
+    );
   }
 };
-
 
 //CaseStudy
 
@@ -318,9 +368,8 @@ LandingModal.getCaseStudysData = (input, output) => {
   }
 };
 
-
-LandingModal.updateCaseStudy = (input,output) => {
-  const {id, title, subTitle, description,imgUrl, url, } = input;
+LandingModal.updateCaseStudy = (input, output) => {
+  const { id, title, subTitle, description, imgUrl, url } = input;
   let query = `update socialMedia set title= '${title}',subTitle='${subTitle}',description='${description}',url='${url}'`;
   if (imgUrl) {
     query += `,image='${imgUrl}' where id=${id};`;
@@ -362,7 +411,10 @@ LandingModal.CreateCaseStudy = (input, callback) => {
     db.query(query, (err, result) => {
       if (err) {
         console.error("Database query error:", err);
-        return callback({ error: "Failed to insert case study into the database" }, null);
+        return callback(
+          { error: "Failed to insert case study into the database" },
+          null
+        );
       }
       callback(null, { message: "SUCCESS" });
     });
@@ -372,11 +424,9 @@ LandingModal.CreateCaseStudy = (input, callback) => {
   }
 };
 
-
-
 //Reviews
 
-LandingModal.getReviewsData = (input,output) => {
+LandingModal.getReviewsData = (input, output) => {
   let query = `SELECT * FROM  reviews`;
   try {
     db.query(query, function (err, result) {
@@ -418,9 +468,8 @@ LandingModal.updateReviewsData = (input, output) => {
   }
 };
 
-
-LandingModal.createReviewsData = (input,output) => {
-  const { title,subTitle, description } = input;
+LandingModal.createReviewsData = (input, output) => {
+  const { title, subTitle, description } = input;
   let query = `INSERT INTO reviews
     (title,subTitle,description)
     VALUES ('${title}','${subTitle}','${description}');`;
@@ -439,6 +488,6 @@ LandingModal.createReviewsData = (input,output) => {
     output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
     throw e;
   }
-}
+};
 
 module.exports = LandingModal;

@@ -175,31 +175,31 @@ exports.getAboutSectionData = ({}, res) => {
 exports.createAboutSectionData = (req, res) => {
   const title = req.body.title;
   const description = req.body.description;
+
   if (!title || !description) {
-    res.sendStatus(Environment.BAD_REQUEST);
-  } else {
-    try {
-      LandingModal.createAboutData(
-        {
-          title,
-          description,
-        },
-        (err, data) => {
-          if (err)
-            res
-              .status(Environment.SERVER_ERROR)
-              .send({ error: Environment.SERVER_ERROR_MESSAGE });
-          else res.send(data);
-        }
-      );
-    } catch (e) {
-      res
-        .status(Environment.SERVER_ERROR)
-        .send({ error: Environment.SERVER_ERROR_MESSAGE });
-      throw e;
-    }
+    console.log("Missing fields: title or description");
+    return res.sendStatus(Environment.BAD_REQUEST); // Add return to prevent further execution
+  }
+
+  try {
+    LandingModal.createAboutData({ title, description }, (err, data) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(Environment.SERVER_ERROR)
+          .send({ error: Environment.SERVER_ERROR_MESSAGE }); // Add return
+      }
+      console.log("Data inserted successfully");
+      res.send(data);
+    });
+  } catch (e) {
+    console.error("Unexpected error:", e);
+    res
+      .status(Environment.SERVER_ERROR)
+      .send({ error: Environment.SERVER_ERROR_MESSAGE });
   }
 };
+
 
 exports.updateAboutSection = (req, res) => {
   const id = req.params.id;
@@ -360,6 +360,30 @@ exports.getBlogsSectionData = ({}, res) => {
     throw e;
   }
 };
+exports.getOneBlogSectionData = (req, res) => {
+  const { id } = req.params; 
+
+  if (!id) {
+    return res.status(400).send({ error: "Blog ID is required" });
+  }
+
+  try {
+    LandingModal.getOneBlogData(id, (err, data) => {
+      if (err) {
+        return res
+          .status(Environment.SERVER_ERROR)
+          .send({ error: err.error.description });
+      } else {
+        return res.send(data);
+      }
+    });
+  } catch (e) {
+    res
+      .status(Environment.SERVER_ERROR)
+      .send({ error: Environment.SERVER_ERROR_MESSAGE });
+  }
+};
+
 exports.createBlogsSectionData = (req, res) => {
   const title = req.body.title;
   const subTitle = req.body.subTitle;

@@ -29,6 +29,7 @@ const upload = multer({ storage: storageImage });
 router.get("/customer/Header", LandingScreenController.getHeaderData);
 router.get("/customer/About", LandingScreenController.getAboutData);
 router.get("/customer/Blogs", LandingScreenController.getBlogData);
+router.get("/customer/Blogs/:id", LandingScreenController.getOneBlogSectionData);
 router.get("/customer/JoinUs", LandingScreenController.getJoinUsData);
 router.get("/customer/CaseStudy", LandingScreenController.getCaseStudyData);
 router.get("/customer/Reviews", LandingScreenController.getReviewData);
