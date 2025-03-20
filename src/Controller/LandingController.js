@@ -178,26 +178,17 @@ exports.createAboutSectionData = (req, res) => {
 
   if (!title || !description) {
     console.log("Missing fields: title or description");
-    return res.sendStatus(Environment.BAD_REQUEST); // Add return to prevent further execution
+    return res.sendStatus(Environment.BAD_REQUEST);
   }
 
-  try {
-    LandingModal.createAboutData({ title, description }, (err, data) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(Environment.SERVER_ERROR)
-          .send({ error: Environment.SERVER_ERROR_MESSAGE }); // Add return
-      }
-      console.log("Data inserted successfully");
-      res.send(data);
-    });
-  } catch (e) {
-    console.error("Unexpected error:", e);
-    res
-      .status(Environment.SERVER_ERROR)
-      .send({ error: Environment.SERVER_ERROR_MESSAGE });
-  }
+  LandingModal.createAboutData({ title, description }, (err, data) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(Environment.SERVER_ERROR).send({ error: Environment.SERVER_ERROR_MESSAGE });
+    }
+    console.log("Data inserted successfully");
+    res.send(data); // Ensure this runs only once
+  });
 };
 
 

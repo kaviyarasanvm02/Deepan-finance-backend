@@ -137,24 +137,15 @@ LandingModal.updateAboutData = (input, output) => {
 
 LandingModal.createAboutData = (input, output) => {
   const { title, description } = input;
-  let query = `INSERT INTO aboutlanding
-    (title,description)
-    VALUES ('${title}','${description}');`;
-  try {
-    db.query(query, function (err, result) {
-      if (err) {
-        output(
-          { error: { description: Environment.SERVER_ERROR_MESSAGE } },
-          null
-        );
-        throw err;
-      }
-      output(null, { message: "SUCCESS" });
-    });
-  } catch (e) {
-    output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
-    throw e;
-  }
+  let query = `INSERT INTO aboutlanding (title, description) VALUES (?, ?);`;
+
+  db.query(query, [title, description], function (err, result) {
+    if (err) {
+      console.error("Database error:", err);
+      return output({ error: { description: Environment.SERVER_ERROR_MESSAGE } }, null);
+    }
+    output(null, { message: "SUCCESS" });
+  });
 };
 
 //Blogs
